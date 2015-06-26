@@ -4,6 +4,7 @@ import (
     "github.com/go-xorm/xorm"
     _ "github.com/mattn/go-sqlite3"
     "log"
+    "fmt"
 )
 
 func GetTestList()[]Stock{
@@ -40,14 +41,35 @@ func Insert3(list []StockIndex) {
     log.Println("Insert result:", afr)
 }
 func Insert4(list []StockPrice) {
+    session:=engine.NewSession()
+    defer session.Close()
+    err:=session.Begin()
+    if err!=nil{
+        fmt.Println(err)
+    }
+    count:=0
+    for _,item:=range list{
+        _,err:=session.Insert(item)
+        if err !=nil{
+            session.Rollback()
+            fmt.Println("Insert err:",err)
+            return
+        }
+        count++
+    }
+    err=session.Commit()
+    if err!=nil{
+        return
+    }
+    fmt.Println("Insert result:",count)
 //    afr, err := engine.Insert(&list)
 //    if err != nil {
 //        log.Println("Insert err:", err)
 //    }
 //    log.Println("Insert result:", afr)
-    for _,v:=range list{
-        InsertOne(v)
-    }
+//    for _,v:=range list{
+//        InsertOne(v)
+//    }
 }
 func Insert2(list interface{}) {
     afr, err := engine.Insert(&list)
