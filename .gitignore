@@ -3,3 +3,5 @@
 /*.txt
 /*.log
 /*.db
+/*.csv
+/app/config/myconfig/myconfig.go

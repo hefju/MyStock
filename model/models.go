@@ -7,14 +7,64 @@ import (
     "fmt"
 )
 
-func GetTestList()[]Stock{
-    stocks:=make([]Stock,0)
+//报告类
+type StatusReport struct  {
+    Id int64
+    From string      //发送人
+    FromTime int64  //发送的时间
+    Title string //标题(分类: 健康,统计的,)
+    Content string //详细内容
+}
+
+
+func GetTestList()[]Stocks{//获取代号,目前只获取sh系列的,
+    stocks:=make([]Stocks,0)
    // err:=engine.Where("id in (2266,2524)").Find(&stocks)
-    err:=engine.Where("stype='sh'").Find(&stocks)
+    err:=engine.Where("stype='sh' and status>-2").Find(&stocks)
     if err!=nil{
         log.Println(err)
     }
     return stocks
+}
+
+func GetStockPrice(id int64)[]*StockPrice{
+    sp:=make([]*StockPrice,0)
+    engine.Where("id>7 and id<9000").Find(&sp)
+//    sp:=new (StockPrice)
+//    engine.Id(id).Get(sp)
+    return sp
+}
+
+func UpdateStockPrice(list []*StockPrice){
+    session:=engine.NewSession()
+    defer session.Close()
+    err:=session.Begin()
+    if err!=nil{
+        fmt.Println(err)
+    }
+    count:=0
+    for _,item:=range list{
+        _,err:=session.Id(item.Id).Update(item)
+        if err !=nil{
+            session.Rollback()
+            fmt.Println("Update err:",err)
+            return
+        }
+        count++
+    }
+    err=session.Commit()
+    if err!=nil{
+        return
+    }
+    fmt.Println("Update result:",count)
+}
+
+func UpdateStockUnuse(scodes []string){//将获取不到信息的票设置未-2
+  //直接在数据库执行下面的语句
+//    update stock set status=-2 where scode in(
+//    select substr(scode,3,30) from stockprice where length(hq_str)=24
+//    group by scode
+//    )
 }
 
 func GetStockTestName()[]string{
@@ -26,21 +76,16 @@ func GetStockTestName()[]string{
     }
     return snames
 }
-func Insert(list []Stock) {
-    afr, err := engine.Insert(&list)
-    if err != nil {
-        log.Println("Insert err:", err)
-    }
-    log.Println("Insert result:", afr)
-}
-func Insert3(list []StockIndex) {
+
+func InsertStockIndex(list []StockIndex) {
   afr, err := engine.Insert(&list)
     if err != nil {
         log.Println("Insert err:", err)
     }
     log.Println("Insert result:", afr)
 }
-func Insert4(list []StockPrice) {
+//
+func InsertStockPrice(list []StockPrice) {
     session:=engine.NewSession()
     defer session.Close()
     err:=session.Begin()
@@ -62,54 +107,51 @@ func Insert4(list []StockPrice) {
         return
     }
     fmt.Println("Insert result:",count)
-//    afr, err := engine.Insert(&list)
-//    if err != nil {
-//        log.Println("Insert err:", err)
-//    }
-//    log.Println("Insert result:", afr)
-//    for _,v:=range list{
-//        InsertOne(v)
-//    }
-}
-func Insert2(list interface{}) {
-    afr, err := engine.Insert(&list)
-    if err != nil {
-        log.Println("Insert err:", err)
-    }
-    log.Println("Insert result:", afr)
-}
-func InsertOne(obj StockPrice){
-//    afr, err := engine.Insert(&obj)
-    afr, err := engine.InsertOne(&obj)
-    if err != nil {
-        log.Println("Insert err:", err)
-    }
-    log.Println("Insert result:", afr)
 }
 
-//func Insert5(list []Price) {
-//    afr, err := engine.Insert(&list)
-//    if err != nil {
-//        log.Println("Insert err:", err)
-//    }
-//    log.Println("Insert result:", afr)
-//}
-//func Insert6(list []User) {
-//    afr, err := engine.Insert(&list)
-//    if err != nil {
-//        log.Println("Insert err:", err)
-//    }
-//    log.Println("Insert result:", afr)
+
+
+
+//*********************************************//
+var engine *xorm.Engine
+func init() {
+    var err error
+    // engine, err = xorm.NewEngine("odbc", "driver={SQL Server};Server=192.168.1.200; Database=JXC; uid=sa; pwd=123;")
+    //engine, err = xorm.NewEngine("odbc", "driver={SQL Server};server=.;database=charge;integrated security=SSPI;")
+    engine, err = xorm.NewEngine("sqlite3", "./mystock.db")
+
+    if err != nil {
+        log.Fatalln("xorm create error", err)
+    }
+   // engine.ShowSQL = true
+    engine.SetMapper(core.SameMapper{})
+    // engine.CreateTables(new(tp_charge_billing))
+
+  //  err = engine.Sync2(new(Stocks),new(StockIndex),new(StockPrice)) //, new(Group)) ,new(StockPrice)
+    if err != nil {
+        log.Fatalln("xorm sync error", err)
+    }
+}
+
+
+//type Stock struct {
+//    Id    int64
+//    Sname string
+//    Scode string
+//    Stype string
+//    Status int  //-2表示没有用的取不到信息的,-1表示未设置,0表示正常,
 //}
 
-
-type Stock struct {
-    Id    int64
-    Sname string
-    Scode string
-    Stype string
-    Status int
+//这个是最正确的名单数据
+type Stocks struct {
+    Id     int64
+    Scode  string //纯数字
+    Scode2 string //字母+数字
+    Sname  string//中文名
+    Stype  string//字母
+    Status int //-2表示没有用的取不到信息的,-1表示未设置,0表示正常,
 }
+
 type StockPrice struct {
     Id     int64
     SName  string
@@ -151,45 +193,23 @@ type StockPrice struct {
     CreatedAt  int64  `xorm:"created"`
     UpdatedAt  int64  `xorm:"updated"`
 }
-// s_sh000001
-// s_sz399001
+
+//大市 s_sh000001  s_sz399001
 type StockIndex struct {
     Id     int64
     STime  string
     SCode  string
     SName  string
-//    CurrentPoint float64
-//    CurrentPrice float64
-//    SPercent float64
-//    TradingVolume float64
-//    Turnover float64
     D当前点数  float64
-    D当前价格  float64
+    Z涨跌价格  float64
     Z涨跌率   float64
     C成交量手  float64
     C成交额万元 float64
     CreatedAt  int64  `xorm:"created"`
     UpdatedAt  int64  `xorm:"updated"`
+    //    CurrentPoint float64
+    //    CurrentPrice float64
+    //    SPercent float64
+    //    TradingVolume float64
+    //    Turnover float64
 }
-
-var engine *xorm.Engine
-
-func init() {
-    var err error
-    // engine, err = xorm.NewEngine("odbc", "driver={SQL Server};Server=192.168.1.200; Database=JXC; uid=sa; pwd=123;")
-    //engine, err = xorm.NewEngine("odbc", "driver={SQL Server};server=.;database=charge;integrated security=SSPI;")
-    engine, err = xorm.NewEngine("sqlite3", "./mystock.db")
-
-    if err != nil {
-        log.Fatalln("xorm create error", err)
-    }
-    //engine.ShowSQL = true
-    engine.SetMapper(core.SameMapper{})
-    // engine.CreateTables(new(tp_charge_billing))
-
-    err = engine.Sync2(new(Stock),new(StockIndex),new(StockPrice)) //, new(Group)) ,new(StockPrice)
-    if err != nil {
-        log.Fatalln("xorm sync error", err)
-    }
-}
-
