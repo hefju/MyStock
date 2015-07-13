@@ -10,6 +10,7 @@ import (
     "bytes"
     "github.com/donnie4w/go-logger/logger"
     "io/ioutil"
+    "github.com/hefju/MyStock/stock"
 )
 type Tasker interface {   //任务接口
     DoWork(t time.Time)   //执行任务
@@ -26,21 +27,20 @@ type SystemReport struct{
 
 //工作,执行任务
 func (stockDownload *StockDownload) DoWork(t time.Time){
-    fmt.Println("StockDownload")
-    return
-    if !stockDownload.checkWorkStatus(t){ //检测执行状态,是否需要执行
+//    fmt.Println("StockDownload")
+//    return
+    if !stockDownload.checkWorkStatus(t){ //检测执行状态,是否需要执行 //每天执行一次
         return
     }
     t1:=time.Now()
 
+    //do something
     done:=make(chan int)
     go   downString(done)
     <-done
-    //do something
-   //\ config.ReportAddr
-   // fmt.Println(config.AppName)
 
-    ElapsedTime:="Elapsed Time:"+fmt.Sprintf("%s", time.Now().Sub(t1))//计算执行任务花费的时间
+    //计算执行任务花费的时间
+    ElapsedTime:="Elapsed Time:"+fmt.Sprintf("%s", time.Now().Sub(t1))
 
     //操作完毕,设置上次执行时间
     stockDownload.LasttimeExec=time.Now()
@@ -51,7 +51,9 @@ func (stockDownload *StockDownload) DoWork(t time.Time){
     stockDownload.sendReport(title,content)
 }
 func downString(done chan int){
-
+    stock.GetMainIndex()
+    stock.DownloadSlowly()
+    done<-1
 }
 //检测执行状态, 如果一天内执行过就不要再执行了.(当然,你可以设置一小时执行一次, 或者1分钟执行一次)
 func (stockDownload *StockDownload) checkWorkStatus(t time.Time) bool {
@@ -65,13 +67,14 @@ func (stockDownload *StockDownload) checkWorkStatus(t time.Time) bool {
 //发送执行报告
 func (stockDownload *StockDownload) sendReport(title,content string){
     //如果不发送email, 就发送到消息中心,消息中心根据优先级别再发送email
-  //go  mail.SendEmail(title,content)
-    mail.InitEmail("","","","","")
-    fmt.Println( "mail.SendEmail ",title," ",content)
+  go  mail.SendEmail(title,content)
+//    mail.InitEmail("","","","","")
+//    fmt.Println( "mail.SendEmail ",title," ",content)
 }
 
 //发送当前计算机状体
 func (systemReport *SystemReport) DoWork(t time.Time) {
+    //发送报告不需要检测是否需要执行, ???这样好吗? 如果定时器太快, 这个方法需要自己的发送间隔啊.
 //    fmt.Println("SystemReport")
 //    return
     url :=config.ReportAddr

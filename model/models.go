@@ -20,7 +20,8 @@ type StatusReport struct  {
 func GetTestList()[]Stocks{//获取代号,目前只获取sh系列的,
     stocks:=make([]Stocks,0)
    // err:=engine.Where("id in (2266,2524)").Find(&stocks)
-    err:=engine.Where("stype='sh' and status>-2").Find(&stocks)
+  //  err:=engine.Where("stype='sh' and status>-2").Find(&stocks)
+    err:=engine.Where(" status>-2").Find(&stocks)
     if err!=nil{
         log.Println(err)
     }

@@ -12,6 +12,7 @@ import (
     "fmt"
     "github.com/guotie/gogb2312"
     "github.com/donnie4w/go-logger/logger"
+//    "log"
 )
 
 
@@ -148,10 +149,39 @@ func getstocks(names []string){
     }
     model.InsertStockPrice(stocks)//xorm如何插入必须要有struct类型.
 }
-
+//发送请求的时候, 不能太频繁, 否则会本机socket缓冲会满,远程会拒绝访问
 func DownloadSlowly() {
-    //
+   stocks:=make([]model.StockPrice,0)//数据, 用来插入到数据库的, 由于处理可能导致程序出错, 所以先保存到数据库,以后再处理.
 
+    codes:=model.GetStockTestName()
+    arrayCount:=len(codes)
+    index:=0
+    over:=false
+    for {
+        max:=index+10
+        if(max>arrayCount){
+            max=arrayCount
+            over=true
+        }
+        list:=codes[index:max]
+        for _,scode:=range list{
+           // log.Println(scode)
+
+            info:= httpget(config.BaseAddr+scode)
+            var s model.StockPrice
+            s.SCode = scode
+            s.Hq_str=info //下载的内容
+            s.IsProcess=-1//是否已经处理,-1未处理,1已处理
+            stocks=append(stocks,s)
+        }
+        if over{
+            break
+        }
+//        log.Println("")
+        index=max
+        time.Sleep(time.Millisecond*100)
+    }
+   model.InsertStockPrice(stocks)//xorm如何插入必须要有struct类型.
 }
 
 //获取上证指数和深圳成指

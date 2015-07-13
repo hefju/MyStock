@@ -13,6 +13,12 @@ var (
 	AppRootPath string //程序的运行目录,如果win service就需要指定目录来存放文件
 	ReportAddr  string //当前程序的名称,发送报告的地址
 	BaseAddr    string //数据下载的基地址
+
+    EmailHOST       string
+    EmailSERVER_ADDR string
+    EmailUSER      string
+    EmailPASSWORD   string
+EmailReceiver string
 )
 
 func init() {
@@ -39,6 +45,19 @@ func init() {
 	}
 	AppRootPath = value
 
+    section, key = "Email", "Receiver"
+    value, err = cfg.GetValue(section, key)
+    if err != nil {
+        msg := fmt.Sprintf("无法获取键值（%s-%s）：%s", section, key, err)
+        panic(msg)
+    }
+    EmailReceiver = value//邮件接收人
+
 	ReportAddr = myconfig.ReportAddr//状态报告地址
     BaseAddr=myconfig.BaseAddr      //数据下载地址
+
+    EmailHOST=myconfig.EmailHOST
+    EmailSERVER_ADDR =myconfig.EmailSERVER_ADDR
+    EmailUSER    =myconfig.EmailUSER
+    EmailPASSWORD  =myconfig.EmailPASSWORD
 }
