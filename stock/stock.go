@@ -1,7 +1,8 @@
 package stock
 import (
 "github.com/hefju/MyStock/model"
-    "github.com/hefju/MyStock/app"
+    "github.com/hefju/MyStock/app/config"
+//    "github.com/hefju/MyStock/app"
    // "fmt"
     "net/http"
     "io/ioutil"
@@ -10,8 +11,9 @@ import (
     "time"
     "fmt"
     "github.com/guotie/gogb2312"
+    "github.com/donnie4w/go-logger/logger"
 )
-var BaseAddr="http://hq.sinajs.cn/list="//s_sh000001
+
 
 
 func Mytest(){
@@ -133,12 +135,10 @@ func Download(){
 //根据代号来获取数据, 因为有些代号是没有用的, 所以传入参数前就处理掉.
 func getstocks(names []string){
     stocks:=make([]model.StockPrice,0)//数据, 用来插入到数据库的, 由于处理可能导致程序出错, 所以先保存到数据库,以后再处理.
-    for k,v:=range names{
-        info:= httpget(BaseAddr+v)
-        //list := strings.Split(info, ",")
+    for k,scode:=range names{
+        info:= httpget(config.BaseAddr+scode)
         var s model.StockPrice
-        s.SCode = v
-
+        s.SCode = scode
         s.Hq_str=info //下载的内容
         s.IsProcess=-1//是否已经处理
         stocks=append(stocks,s)
@@ -147,15 +147,19 @@ func getstocks(names []string){
         }
     }
     model.InsertStockPrice(stocks)//xorm如何插入必须要有struct类型.
-   // fmt.Println(stocks)
+}
+
+func DownloadSlowly() {
+    //
+
 }
 
 //获取上证指数和深圳成指
 func GetMainIndex(){
     //  maincode:=make([]string,0)
     maincode:=[]string{"s_sh000001","s_sz399001"}
-    maincode[0]=  BaseAddr+  maincode[0]
-    maincode[1]=  BaseAddr+  maincode[1]
+    maincode[0]=  config.BaseAddr+  maincode[0]
+    maincode[1]=  config.BaseAddr+  maincode[1]
 
     GetMainIndexString(maincode)//获取,分析,插入数据
     fmt.Println("GetMainIndex end!")
@@ -168,13 +172,7 @@ func GetMainIndexString(urls []string) {
         info=info[0:len(info)-3]
         list := strings.Split(info, ",")
         var i model.StockIndex
-//        fmt.Println("k:",k," ",list)
-//        fmt.Println("0:",list[0])
-//        fmt.Println("1:",list[1])
-//        fmt.Println("2:",list[2])
-//        fmt.Println("3:",list[3])
-//        fmt.Println("4:",list[4])
-//        fmt.Println("5:",list[5])
+
         i.SCode=v[len(v)-10:]
         i.SName=GetIndexName( i.SCode)
         i.STime=time.Now().Format("2006-01-02")//这是获取数据的日期,未必是数据发生的日期.例如星期六日和节假日
@@ -209,7 +207,8 @@ func GetIndexName(name string)string{
 func getfloat64(str string)float64{
     f,err:=strconv.ParseFloat(str,64)
     if err!=nil{
-        app.Log.Fatal("getfloat64:",str,"-",err)
+        //app.Log.Fatal("getfloat64:",str,"-",err)
+        logger.Fatal("getfloat64:",str,"-",err)
         return 0
     }
     return f
@@ -219,12 +218,14 @@ func getfloat64(str string)float64{
 func httpget(url string)string{
     resp,err:=http.Get(url)
     if err!=nil{
-       app.Log.Println("httpget:",err)
+      // app.Log.Println("httpget:",err)
+        logger.Error("httpget:",err)
     }
     defer resp.Body.Close()
     body,err:=ioutil.ReadAll(resp.Body)
     if err!=nil{
-        app.Log.Println("httpget-ioutil.ReadAll:",err)
+        //app.Log.Println("httpget-ioutil.ReadAll:",err)
+        logger.Error("httpget-ioutil.ReadAll:",err)
     }
     bodystr := string(handleGb2312(body))//目标网站使用的是gb2312的编码,有点麻烦
     return bodystr

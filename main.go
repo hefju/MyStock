@@ -1,18 +1,18 @@
 package main
 import (
-    //"github.com/hefju/MyStock/stock"
-    "github.com/hefju/MyStock/app"
+    "github.com/hefju/MyStock/stock"
+//    "github.com/hefju/MyStock/app"
 //    "github.com/hefju/GoTools"
     "fmt"
 )
 func main(){
-    app.Run()
+//    app.Run()
    // fmt.Println(model.GetStockTestName())// model.GetTestList())
 
 //    stock :=& task.StockDownload{}
 //    stock.DoWork(t1)
-//    stock.GetMainIndex()
-//        stock.Download()
+    stock.GetMainIndex()
+        stock.Download()
     //  stock.Processing()//7-9000
 //    GoTools.Hello()
 

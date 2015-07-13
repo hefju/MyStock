@@ -11,7 +11,7 @@ import (
     "github.com/donnie4w/go-logger/logger"
     "io/ioutil"
 )
-type Tasker interface {
+type Tasker interface {   //任务接口
     DoWork(t time.Time)   //执行任务
 }
 //数据下载程序
@@ -33,6 +33,9 @@ func (stockDownload *StockDownload) DoWork(t time.Time){
     }
     t1:=time.Now()
 
+    done:=make(chan int)
+    go   downString(done)
+    <-done
     //do something
    //\ config.ReportAddr
    // fmt.Println(config.AppName)
@@ -46,6 +49,9 @@ func (stockDownload *StockDownload) DoWork(t time.Time){
     title:="StockDownload:"+time.Now().Format("2006.1.2 15:04:05")
     content:=ElapsedTime+""
     stockDownload.sendReport(title,content)
+}
+func downString(done chan int){
+
 }
 //检测执行状态, 如果一天内执行过就不要再执行了.(当然,你可以设置一小时执行一次, 或者1分钟执行一次)
 func (stockDownload *StockDownload) checkWorkStatus(t time.Time) bool {
@@ -66,8 +72,8 @@ func (stockDownload *StockDownload) sendReport(title,content string){
 
 //发送当前计算机状体
 func (systemReport *SystemReport) DoWork(t time.Time) {
-    fmt.Println("SystemReport")
-    return
+//    fmt.Println("SystemReport")
+//    return
     url :=config.ReportAddr
     report:=model.StatusReport{From:config.AppName,FromTime:time.Now().Unix(),Title:"状态报告",Content:"I'm still alive"}
     jsonStr, _ := json.Marshal(report)

@@ -1,21 +1,22 @@
 package app
 import (
-    "fmt"
-//    "os"
-//    "github.com/donnie4w/go-logger/logger"
-//    "github.com/hefju/MyStock/app/config"
+//    "fmt"
+    "os"
+    "github.com/donnie4w/go-logger/logger"
+    "github.com/hefju/MyStock/app/config"
     "github.com/hefju/MyStock/task"
     "time"
 )
-
+//初始化日志
 func initLogger(){
-    fmt.Println("app-initLogger")
-//    os.MkdirAll(config.AppRootPath+"/log", 0777)
-//    logger.SetRollingDaily(config.AppRootPath+"/log", "test.log") //如果没有log文件夹, 需要新增文件夹
-//    logger.SetLevel(logger.DEBUG)
+  //  fmt.Println("app-initLogger")
+    os.MkdirAll(config.AppRootPath+"/log", 0777)
+    logger.SetRollingDaily(config.AppRootPath+"/log", "test.log") //如果没有log文件夹, 需要新增文件夹
+    logger.SetLevel(logger.DEBUG)
 }
+//运行程序
 func Run(){
-    //1.初始化config
+    //1.初始化config, 因为Logger的初始化目录要从config读取
     initLogger()//2.初始化日志
 
     //获取任务队列
