@@ -166,7 +166,7 @@ func DownloadSlowly() {
         list:=codes[index:max]
         for _,scode:=range list{
            // log.Println(scode)
-
+            fmt.Println(scode)
             info:= httpget(config.BaseAddr+scode)
             var s model.StockPrice
             s.SCode = scode

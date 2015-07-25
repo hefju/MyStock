@@ -8,6 +8,7 @@ import (
 //    "github.com/hefju/MyStock/task"
 )
 func main(){
+    fmt.Println("welcome to mystock!")
     app.Run()
 
 

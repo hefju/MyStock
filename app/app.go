@@ -28,10 +28,10 @@ func Run(){
     list:=getTaskList()
 
     //定时触发任务
-    ticker:=time.NewTicker(time.Second*3)//time.Minute*10)
+    ticker:=time.NewTicker(time.Minute*10)//time.Second*3
     for t:=range ticker.C{
         for _,item:=range list  {
-            item.DoWork(t)
+            go  item.DoWork(t)
         }
     }
 
